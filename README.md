@@ -38,7 +38,7 @@ Each level is described by the following properties in a python dictionary:
 | description | Helpful information about this element | False | False | Blank string |
 | type | Data type of the value. Should be one of map, list, string, number or boolean | False | True | n/a |
 | value_schema | Schema to be used for any of the child values by default. | Depends(1) | True | n/a |
-| Map Specific | --- | --- | --- | --- |
+| **Map Specific** |  |  |  |  |
 | known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
 | allow_unknown_children | Should the UI allow adding children whose names are not known.  If this is set to true, value schema attribute above must be defined. | False | False | False |
 | mandatory_children | Names for which values must be provided.  Useful for a map only.	| False | True | No Restrictions | 
@@ -47,7 +47,7 @@ Each level is described by the following properties in a python dictionary:
 | maximum_value	| Used for int type leaf nodes only.| False | True | No Limit | 
 | String Specific | --- | --- | --- | --- |
 | allowed_pattern | Used for string type values only.  Regular expression to validate given input strings. | False | False | No restrictions |
-| valid_values | Used for string type values only.  List of values allowed to be set. | False | True | No restrictions | 
+| allowed_values | Used for string type values only.  List of values allowed to be set. | False | True | No restrictions |
 | Boolean Specific | --- | --- | --- | --- |
 | true_value | Used for boolean type leaf nodes only.  String to be displayed if the underlying value is True. For example: Yes, Enabled, True etc. | False | False | True |
 | false_value | Used for boolean type leaf nodes only. String to be displayed if the underlying value is False. For example: No, Disabled, False etc. | False | False | True |
