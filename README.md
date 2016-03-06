@@ -42,13 +42,13 @@ Each level is described by the following properties in a python dictionary:
 | known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
 | allow_unknown_children | Should the UI allow adding children whose names are not known.  If this is set to true, value schema attribute above must be defined. | False | False | False |
 | mandatory_children | Names for which values must be provided.  Useful for a map only.	| False | True | No Restrictions | 
-| Number Specific | --- | --- | --- | --- |
+| **Number Specific** |  |  |  |  |
 | minimum_value | Used for int type leaf nodes only. | False | True | No Limit |
 | maximum_value	| Used for int type leaf nodes only.| False | True | No Limit | 
-| String Specific | --- | --- | --- | --- |
+| **String Specific** |  |  |  |  |
 | allowed_pattern | Used for string type values only.  Regular expression to validate given input strings. | False | False | No restrictions |
 | allowed_values | Used for string type values only.  List of values allowed to be set. | False | True | No restrictions |
-| Boolean Specific | --- | --- | --- | --- |
+| **Boolean Specific** |  |  |  |  |
 | true_value | Used for boolean type leaf nodes only.  String to be displayed if the underlying value is True. For example: Yes, Enabled, True etc. | False | False | True |
 | false_value | Used for boolean type leaf nodes only. String to be displayed if the underlying value is False. For example: No, Disabled, False etc. | False | False | True |
 
