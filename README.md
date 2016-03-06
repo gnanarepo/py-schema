@@ -68,11 +68,11 @@ python data. Advantage of such approach is to give out list of names or children
 While we can make everything dynamic, we choose to support a sensible subset.
 
 A process called schema realization must be executed to run the python code and realize
-the true schema. First call to validate or an explicit call performs the relization of schema.
+the true schema. First call to validate or an explicit call performs the realization of schema.
 However note that, validate realizes only the part of the schema that is actually used, where as realize
 call truly realizes the entire schema dynamically.
 
-See the test.py code for an example of lambda support. Running this code produces the following output:
+See the samples/basics.py code for an example of lambda support. Running this code produces the following output:
 
 ```
 Realized schema
@@ -114,4 +114,3 @@ Sample Validation Errors: 3 (No errors)
 ---------------
 []
 ```
-
