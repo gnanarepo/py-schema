@@ -57,6 +57,7 @@ class SchemaNode(object):
             raise SchemaError('display_name is mandatory at level %s' % self.level)
         self.level += '(%s)' % self.display_name
         self.realized = False
+        self.verbatim = schema_dict.pop('verbatim', None)
 
     def process_children(self):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
@@ -98,9 +99,16 @@ class SchemaNode(object):
 
         attrs['display_name'] = self.display_name
         attrs['type'] = self.type
+        if self.verbatim is not None:
+            attrs['verbatim'] = self.verbatim
 
     def validate(self, data):
+        """
+        Validate the data and return the violations found
 
+        :param data:
+        :return: List of violations.  Each violation is basically a string, and it is unstructured.
+        """
         # Realize if necessary
         if not self.realized:
             print "Realizing the schema"
