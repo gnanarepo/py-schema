@@ -50,11 +50,12 @@ Each level is described by the following properties in a python dictionary:
 | valid_values | Used for string type values only.  List of values allowed to be set. | False | True | No restrictions | 
 | Boolean Specific | --- | --- | --- | --- |
 | true_value | Used for boolean type leaf nodes only.  String to be displayed if the underlying value is True. For example: Yes, Enabled, True etc. | False | False | True |
-| false_value | Used for boolean type leaf nodes only. | String to be displayed if the underlying value is True. For example: No, Disabled, False etc. | False | False | True |
+| false_value | Used for boolean type leaf nodes only. String to be displayed if the underlying value is False. For example: No, Disabled, False etc. | False | False | True |
 
 
 1. For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
-2. It is possible that this map might not contains names for which information is already provided.  Such names are logged as warnings and will not be displayed.  Making changes in such cases will remove these values.  (Unless of course allow_unknown_values is set to true)
+2. Data is only validated and never modified.  Validation errors are listed as a simple list of strings.
+
 
 Lambda Support
 --------------
