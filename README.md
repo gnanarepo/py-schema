@@ -12,27 +12,16 @@ Each level is described by the following properties in a python dictionary:
 | Name | Description | Required | Lambda Support | Default |
 | ---- | ---- | ---- | ---- | ---- |
 | display_name | Name to be used in the display | True | False | n/a |
+| description | Helpful information about this element | False | False | Blank string |
+| type | Data type of the value. Should be one of map, list, string, number or boolean | False | True | n/a |
+| value_schema | Schema to be used for any of the child values by default. | Depends(1) | True | n/a |
+| known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
+| ---- | ---- | ---- | ---- | ---- |
 
-description	Helpful information about this element to be displayed as help text/tooltip in the UI.	False	False	
 
-Blank string
-value_schema	
+1. For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
 
-Schema to be used for any of the child values by default.
 
-For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
-
-For a leaf level node, schema should not be defined.  A leaf level node is always number, string or boolean.
-	False	True	See the explanation
-type	
-
-Type of the value.  Should be one of number, string, boolean, map or list. 
-
-For leaf level values type is mandatory.  However type is not mandatory for containers at the top level.
-	False	False	null.  See the explanation
-known_children	
-
-A map of named children that are allowed at this level.  Each named children can have their own schema object/document.  
 
 NOTE for backend: Known names can be a string instead of map, in which case this string is interpolated as python code using eval.  We expect the return value of this eval to be a map as if it is specified inside the code.
 
