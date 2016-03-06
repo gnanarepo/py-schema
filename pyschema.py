@@ -51,6 +51,7 @@ class SchemaNode(object):
 
     def __init__(self, level, schema_dict):
         self.level = level
+        self._level = level
         try:
             self.display_name = schema_dict.pop('display_name')
         except:
@@ -88,8 +89,9 @@ class SchemaNode(object):
                     setattr(self, key_name, obj)
                 except SchemaError:
                     raise
-                except Exception:
-                    raise SchemaError("Error when realizing dynamic schema for %s at %s" % (key_name, self.level))
+                #except Exception as ex:
+                    #raise ex
+                    # raise SchemaError("Error (%s) when realizing dynamic schema for %s at %s" % (str(ex), key_name, self.level))
 
         self.realized = True
 
@@ -285,14 +287,8 @@ class MapNode(SchemaNode):
 
         # Create schema nodes for all known children and make sure there is default schema if
         # a name defines no specific schema
-        self.known_children = {}
-        for k,v in schema_dict.pop('known_children', {}).iteritems():
-            if v:
-                self.known_children[k] = SchemaNode.create_schema_node(level+'.'+k, v)
-            else:
-                self.known_children[k] = None
-                if self.value_schema is None:
-                    raise SchemaError('Name %s defines no schema and there is no value schema at %s' % (k, level))
+        self._preset = False
+        self.known_children = schema_dict.pop('known_children', {})
 
         # Check for allow unknown values
         try:
@@ -304,6 +300,28 @@ class MapNode(SchemaNode):
 
         # Get other attributes
         self.mandatory_names = set(schema_dict.pop('mandatory_children', []))
+
+    def set_known_children(self, child_object):
+        if isinstance(child_object, dict):
+            if (self._preset):
+                raise SchemaError('CODE ERROR: Setting children twice')
+            self._preset = True
+            self._known_children = {}
+            for k,v in child_object.iteritems():
+                if v:
+                    self._known_children[k] = SchemaNode.create_schema_node(self._level+'.'+k, v)
+                else:
+                    self._known_children[k] = None
+                    if self.value_schema is None:
+                        raise SchemaError('Name %s defines no schema and there is no value schema at %s' % (k, self._level))
+        else:
+            self._preset = False
+            self._known_children = child_object
+
+    def get_known_children(self):
+        return self._known_children
+
+    known_children = property(get_known_children, set_known_children)
 
     def realize_schema(self, attrs):
         super(MapNode, self).realize_schema(attrs)

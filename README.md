@@ -38,6 +38,7 @@ Each level is described by the following properties in a python dictionary:
 | description | Helpful information about this element | False | False | Blank string |
 | type | Data type of the value. Should be one of map, list, string, number or boolean | False | True | n/a |
 | value_schema | Schema to be used for any of the child values by default. | Depends(1) | True | n/a |
+| verbatim | Any information to be saved along with schema. (3) | False | False | None |
 | **Map Specific** |  |  |  |  |
 | known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
 | allow_unknown_children | Should the UI allow adding children whose names are not known.  If this is set to true, value schema attribute above must be defined. | False | False | False |
@@ -55,6 +56,8 @@ Each level is described by the following properties in a python dictionary:
 
 1. For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
 2. Data is only validated and never modified.  Validation errors are listed as a simple list of strings.
+3. Verbatim data is for other consumers for example UI to drive the widgets or to give hints.  It has no meaning for the backend.
+
 
 
 Lambda Support
@@ -65,11 +68,11 @@ python data. Advantage of such approach is to give out list of names or children
 While we can make everything dynamic, we choose to support a sensible subset.
 
 A process called schema realization must be executed to run the python code and realize
-the true schema. First call to validate or an explicit call performs the relization of schema.
+the true schema. First call to validate or an explicit call performs the realization of schema.
 However note that, validate realizes only the part of the schema that is actually used, where as realize
 call truly realizes the entire schema dynamically.
 
-See the test.py code for an example of lambda support. Running this code produces the following output:
+See the samples/basics.py code for an example of lambda support. Running this code produces the following output:
 
 ```
 Realized schema
@@ -111,4 +114,3 @@ Sample Validation Errors: 3 (No errors)
 ---------------
 []
 ```
-
