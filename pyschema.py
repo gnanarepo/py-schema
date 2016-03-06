@@ -116,7 +116,6 @@ class SchemaNode(object):
         """
         # Realize if necessary
         if not self.realized:
-            print "Realizing the schema"
             self._realize_node()
 
         # Perform common validation
@@ -327,16 +326,8 @@ class MapNode(SchemaNode):
     def set_known_children(self, child_object):
         if isinstance(child_object, dict):
             if (self._preset):
-                print "\n\n\nCalled second time %s" % self.level
-                traceback.print_exc()
                 raise SchemaError('CODE ERROR: Setting children twice')
-
-
             self._preset = True
-
-            print "\n\n\nCalled first time %s" % self.level
-            traceback.print_exc()
-
             self._known_children = {}
             for k,v in child_object.iteritems():
                 if v:
