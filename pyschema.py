@@ -228,7 +228,7 @@ class NumberNode(SchemaNode):
             return [ "Value %s is smaller than %s at %s" % (data, self.min_value, self.level)]
 
         if self.max_value and data > self.max_value:
-            return [ "Value %s is greater than %s at %s" % (data, self.min_value, self.level)]
+            return [ "Value %s is greater than %s at %s" % (data, self.max_value, self.level)]
 
         return [ ]
 
