@@ -5,7 +5,7 @@ nevertheless use dictionaries or lists of various data and are stuck with it, sp
 for saving configuration etc.
 """
 import re
-
+import traceback
 
 type_mismatch = 'Expecting value to be {type} but got {actual_type} for {level}'
 invalid_boolean = 'Invalid Value for boolean field'
@@ -66,7 +66,9 @@ class SchemaNode(object):
     def _execute_if_necessary(self, code_like, expected_type):
         if isinstance(code_like, expected_type):
             ret_value = code_like
+            executed = False
         else:
+            executed = True
             if callable(code_like):
                 ret_value = code_like()
             elif isinstance(code_like, basestring):
@@ -78,15 +80,16 @@ class SchemaNode(object):
                 schema_type_mismatch = "Dynamic schema generated %s doesn't match the expected type %s at %s"
                 raise SchemaError( schema_type_mismatch % (type(ret_value), expected_type, self.level))
 
-        return ret_value
+        return ret_value, executed
 
     def _realize_node(self):
         for key_name, expected_type in self.allowed_expansions:
             obj = getattr(self, key_name, None)
             if obj:
                 try:
-                    obj = self._execute_if_necessary(obj, expected_type)
-                    setattr(self, key_name, obj)
+                    obj, executed = self._execute_if_necessary(obj, expected_type)
+                    if executed:
+                        setattr(self, key_name, obj)
                 except SchemaError:
                     raise
                 #except Exception as ex:
@@ -113,7 +116,6 @@ class SchemaNode(object):
         """
         # Realize if necessary
         if not self.realized:
-            print "Realizing the schema"
             self._realize_node()
 
         # Perform common validation
@@ -129,7 +131,6 @@ class SchemaNode(object):
 
     def validate_data(self, data):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
-
 
     @staticmethod
     def create_schema_node(level, schema_dict):
@@ -186,17 +187,38 @@ class StringNode(SchemaNode):
         return [ ]
 
 
-class ListNode(SchemaNode):
+class SubSchemaNode(SchemaNode):
+
+    def __init__(self, level, schema_dict):
+        super(SubSchemaNode, self).__init__(level, schema_dict)
+        self._subschema_realized = False
+
+    def get_sub_schema(self):
+        return self._sub_schema
+
+    def set_sub_schema(self, obj):
+        if isinstance(obj, dict):
+            if self._subschema_realized:
+                raise SchemaError('Subschema already realized')
+
+            try:
+                self.sub_schema = SchemaNode.create_schema_node(self._level+'.n', obj)
+            except KeyError:
+                raise SchemaError('List type node requires a value_schema at %s' % self.level)
+
+            self._subschema_realized = True
+        else:
+            self._sub_schema = obj
+
+    sub_schema = property(get_sub_schema, set_sub_schema)
+
+class ListNode(SubSchemaNode):
     expected_types = (list, set, tuple)
     type = 'list'
 
     def __init__(self, level, schema_dict):
         super(ListNode, self).__init__(level, schema_dict)
-
-        try:
-            self.sub_schema = SchemaNode.create_schema_node(level+'.n', schema_dict.pop('value_schema'))
-        except KeyError:
-            raise SchemaError('List type node requires a value_schema at %s' % self.level)
+        self.sub_schema = schema_dict.pop('value_schema', None)
 
     def realize_schema(self, attrs):
         super(ListNode, self).realize_schema(attrs)
