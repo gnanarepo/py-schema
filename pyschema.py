@@ -54,6 +54,7 @@ class SchemaNode(object):
         self._level = level
         try:
             self.display_name = schema_dict.pop('display_name')
+            self.description = schema_dict.pop('description')
         except:
             raise SchemaError('display_name is mandatory at level %s' % self.level)
         self.level += '(%s)' % self.display_name
@@ -103,6 +104,7 @@ class SchemaNode(object):
             self._realize_node()
 
         attrs['display_name'] = self.display_name
+        attrs['description'] = self.description
         attrs['type'] = self.type
         if self.verbatim is not None:
             attrs['verbatim'] = self.verbatim
