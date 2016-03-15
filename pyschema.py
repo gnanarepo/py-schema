@@ -104,6 +104,7 @@ class SchemaNode(object):
             self._realize_node()
 
         attrs['display_name'] = self.display_name
+        attrs['description'] = self.description
         attrs['type'] = self.type
         if self.verbatim is not None:
             attrs['verbatim'] = self.verbatim
