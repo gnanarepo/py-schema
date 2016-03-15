@@ -54,7 +54,7 @@ class SchemaNode(object):
         self._level = level
         try:
             self.display_name = schema_dict.pop('display_name')
-            self.description = schema_dict.pop('description')
+            self.description = schema_dict.pop('description', '')
         except:
             raise SchemaError('display_name is mandatory at level %s' % self.level)
         self.level += '(%s)' % self.display_name
@@ -65,7 +65,7 @@ class SchemaNode(object):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
 
     def _execute_if_necessary(self, code_like, expected_type):
-        if isinstance(code_like, expected_type):
+        if isinstance(code_like, (expected_type, SchemaNode)):
             ret_value = code_like
             executed = False
         else:
@@ -75,7 +75,7 @@ class SchemaNode(object):
             elif isinstance(code_like, basestring):
                 ret_value = eval(code_like)
             else:
-                raise SchemaError("Don't known how to execute dynamic schema at %s" % self.level)
+                raise SchemaError("Don't known how to execute dynamic schema at %s (expected type = %s, actual type =%s)" % (self.level,expected_type, type(code_like)))
 
             if not isinstance(ret_value, expected_type):
                 schema_type_mismatch = "Dynamic schema generated %s doesn't match the expected type %s at %s"
@@ -372,7 +372,7 @@ class MapNode(SchemaNode):
             if each_key not in self.known_children and self.allow_unknown_children == False:
                 schema_errors.append('%s is not allowed at level %s' % (each_key, self.level))
 
-            sub_schema = self.known_children[each_key] or self.value_schema
+            sub_schema = self.known_children.get(each_key) or self.value_schema
             schema_errors.extend(sub_schema.validate(data[each_key]))
 
             names_found.add(each_key)
