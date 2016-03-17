@@ -61,7 +61,7 @@ class SchemaNode(object):
         self.realized = False
         self.verbatim = schema_dict.pop('verbatim', None)
         self.allow_none = schema_dict.pop('allow_none', False)
-        self.custom_validation = schema_dict.pip('custom_validation', None)
+        self.custom_validation = schema_dict.pop('custom_validation', None)
 
     def process_children(self):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
