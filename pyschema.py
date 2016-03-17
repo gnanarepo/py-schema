@@ -41,7 +41,7 @@ class Schema(object):
 class SchemaNode(object):
     allowed_expansions = {
         ('known_children', dict),
-        ('value_schema', dict),
+        ('sub_schema', dict),
         ('minimum_value', int),
         ('maximum_value', float),
         ('allowed_values', (list, set, tuple))
@@ -60,6 +60,8 @@ class SchemaNode(object):
         self.level += '(%s)' % self.display_name
         self.realized = False
         self.verbatim = schema_dict.pop('verbatim', None)
+        self.allow_none = schema_dict.pop('allow_none', False)
+        self.custom_validation = schema_dict.pop('custom_validation', None)
 
     def process_children(self):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
@@ -106,8 +108,13 @@ class SchemaNode(object):
         attrs['display_name'] = self.display_name
         attrs['description'] = self.description
         attrs['type'] = self.type
+        attrs['allow_none'] = self.allow_none
         if self.verbatim is not None:
             attrs['verbatim'] = self.verbatim
+        if self.custom_validation:
+            attrs['custom_validation'] = {}
+            attrs['custom_validation']['enabled'] = True
+            attrs['custom_validation']['info'] = self.custom_validation.__doc__
 
     def validate(self, data):
         """
@@ -120,6 +127,14 @@ class SchemaNode(object):
         if not self.realized:
             self._realize_node()
 
+        if data is None:
+            if self.allow_none:
+                return [ ]
+            else:
+                return [
+                    "Null is not allowed at level %s" % self.level
+                ]
+
         # Perform common validation
         if not isinstance(data, self.expected_types):
             return [
@@ -129,7 +144,11 @@ class SchemaNode(object):
             ]
 
         # Perform node specific validation
-        return self.validate_data(data)
+        schema_errors =  self.validate_data(data)
+        if self.custom_validation:
+            schema_errors.extend(self.custom_validation(data))
+
+        return schema_errors
 
     def validate_data(self, data):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
@@ -194,6 +213,8 @@ class SubSchemaNode(SchemaNode):
     def __init__(self, level, schema_dict):
         super(SubSchemaNode, self).__init__(level, schema_dict)
         self._subschema_realized = False
+        self._sub_schema = None
+        self.sub_schema = schema_dict.pop('value_schema', None)
 
     def get_sub_schema(self):
         return self._sub_schema
@@ -214,13 +235,15 @@ class SubSchemaNode(SchemaNode):
 
     sub_schema = property(get_sub_schema, set_sub_schema)
 
+
 class ListNode(SubSchemaNode):
     expected_types = (list, set, tuple)
     type = 'list'
 
     def __init__(self, level, schema_dict):
         super(ListNode, self).__init__(level, schema_dict)
-        self.sub_schema = schema_dict.pop('value_schema', None)
+        self.min_size = schema_dict.pop('minimum_size', None)
+        self.max_size = schema_dict.pop('maximum_size', None)
 
     def realize_schema(self, attrs):
         super(ListNode, self).realize_schema(attrs)
@@ -230,7 +253,15 @@ class ListNode(SubSchemaNode):
 
     def validate_data(self, data):
         schema_errors = []
+
+        if self.min_size and len(data) < self.min_size:
+            schema_errors.extend('Minimum size is set to %s, but actual size is %s at level %s' % (self.min_size, len(data), self.level))
+
+        if self.max_size and len(data) < self.min_size:
+            schema_errors.extend('Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level))
+
         for i, each_value in enumerate(data):
+
             schema_errors.extend(self.sub_schema.validate(each_value))
 
         return schema_errors
@@ -293,7 +324,7 @@ class BooleanNode(SchemaNode):
         return [ ]
 
 
-class MapNode(SchemaNode):
+class MapNode(SubSchemaNode):
     """ Defines a schema node for the dictionary data.
     """
     expected_types = dict
@@ -301,13 +332,6 @@ class MapNode(SchemaNode):
 
     def __init__(self, level, schema_dict):
         super(MapNode, self).__init__(level, schema_dict)
-
-        # Create the default schema node if necessary
-        default_schema = schema_dict.pop('value_schema', None)
-        if default_schema:
-            self.value_schema = SchemaNode.create_schema_node(level+'.default', default_schema)
-        else:
-            self.value_schema = None
 
         # Create schema nodes for all known children and make sure there is default schema if
         # a name defines no specific schema
@@ -317,7 +341,7 @@ class MapNode(SchemaNode):
         # Check for allow unknown values
         try:
             self.allow_unknown_children = get_bool(schema_dict.pop('allow_unknown_children', False))
-            if self.allow_unknown_children and self.value_schema is None:
+            if self.allow_unknown_children and self.sub_schema is None:
                 raise SchemaError('Unknown children is true without value schema at %s' % level)
         except ValueError:
             raise SchemaError('Unknown boolean value for allow_unknown_children at %s' % level)
@@ -325,34 +349,12 @@ class MapNode(SchemaNode):
         # Get other attributes
         self.mandatory_names = set(schema_dict.pop('mandatory_children', []))
 
-    def set_known_children(self, child_object):
-        if isinstance(child_object, dict):
-            if (self._preset):
-                raise SchemaError('CODE ERROR: Setting children twice')
-            self._preset = True
-            self._known_children = {}
-            for k,v in child_object.iteritems():
-                if v:
-                    self._known_children[k] = SchemaNode.create_schema_node(self._level+'.'+k, v)
-                else:
-                    self._known_children[k] = None
-                    if self.value_schema is None:
-                        raise SchemaError('Name %s defines no schema and there is no value schema at %s' % (k, self._level))
-        else:
-            self._preset = False
-            self._known_children = child_object
-
-    def get_known_children(self):
-        return self._known_children
-
-    known_children = property(get_known_children, set_known_children)
-
     def realize_schema(self, attrs):
         super(MapNode, self).realize_schema(attrs)
 
-        if self.value_schema:
+        if self.sub_schema:
             attrs['value_schema'] = {}
-            self.value_schema.realize_schema(attrs['value_schema'])
+            self.sub_schema.realize_schema(attrs['value_schema'])
 
         attrs['known_children'] = {}
         for k, v in self.known_children.iteritems():
@@ -372,7 +374,7 @@ class MapNode(SchemaNode):
             if each_key not in self.known_children and self.allow_unknown_children == False:
                 schema_errors.append('%s is not allowed at level %s' % (each_key, self.level))
 
-            sub_schema = self.known_children.get(each_key) or self.value_schema
+            sub_schema = self.known_children.get(each_key) or self.sub_schema
             schema_errors.extend(sub_schema.validate(data[each_key]))
 
             names_found.add(each_key)
@@ -382,6 +384,28 @@ class MapNode(SchemaNode):
             schema_errors.append("Values are required for %s at %s" % (",".join(remaining_names), self.level))
 
         return schema_errors
+
+    def set_known_children(self, child_object):
+        if isinstance(child_object, dict):
+            if (self._preset):
+                raise SchemaError('CODE ERROR: Setting children twice')
+            self._preset = True
+            self._known_children = {}
+            for k,v in child_object.iteritems():
+                if v:
+                    self._known_children[k] = SchemaNode.create_schema_node(self._level+'.'+k, v)
+                else:
+                    self._known_children[k] = None
+                    if self.sub_schema is None:
+                        raise SchemaError('Name %s defines no schema and there is no value schema at %s' % (k, self._level))
+        else:
+            self._preset = False
+            self._known_children = child_object
+
+    def get_known_children(self):
+        return self._known_children
+
+    known_children = property(get_known_children, set_known_children)
 
 
 class SchemaError(Exception):
