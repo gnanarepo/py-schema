@@ -156,6 +156,7 @@ class SchemaNode(object):
     @staticmethod
     def create_schema_node(level, schema_dict):
         # Get the type of the node and create the object
+        schema_dict = schema_dict.copy()
         node_type = schema_dict.pop('type', 'map')
         if node_type == 'map':
             schema_node = MapNode(level, schema_dict)
