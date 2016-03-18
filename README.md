@@ -40,6 +40,7 @@ Each level is described by the following properties in a python dictionary:
 | value_schema | Schema to be used for any of the child values by default. | Depends(1) | True | n/a |
 | verbatim | Any information to be saved along with schema. (3) | False | False | None |
 | allow_none | Allow None value.  No validations are made if the value is None | False | False | False |
+| custom_validation | Python function that peforms custom validation (in addition to other). In the realized schema, it will just say True. | False | False | None |
 | **Map Specific** |  |  |  |  |
 | known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
 | allow_unknown_children | Should the UI allow adding children whose names are not known.  If this is set to true, value schema attribute above must be defined. | False | False | False |
