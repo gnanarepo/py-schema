@@ -36,7 +36,7 @@ Each level is described by the following properties in a python dictionary:
 | ---- | ---- | ---- | ---- | ---- |
 | display_name | Name to be used in the display | True | False | n/a |
 | description | Helpful information about this element | False | False | Blank string |
-| type | Data type of the value. Should be one of map, list, string, number or boolean | False | True | n/a |
+| type | Data type of the value. Should be one of map, list, string, number, boolean or any(4) | False | True | n/a |
 | value_schema | Schema to be used for any of the child values by default. | Depends(1) | True | n/a |
 | verbatim | Any information to be saved along with schema. (3) | False | False | None |
 | allow_none | Allow None value.  No validations are made if the value is None | False | False | False |
@@ -61,7 +61,7 @@ Each level is described by the following properties in a python dictionary:
 1. For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
 2. Data is only validated and never modified.  Validation errors are listed as a simple list of strings.
 3. Verbatim data is for other consumers for example UI to drive the widgets or to give hints.  It has no meaning for the backend.
-
+4. Any type has no validations done except for any custom validations.  Use with care.  You are creating the schema to avoid any in the first place :-)
 
 
 Lambda Support

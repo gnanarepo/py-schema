@@ -168,6 +168,8 @@ class SchemaNode(object):
             schema_node = ListNode(level, schema_dict)
         elif node_type == 'boolean':
             schema_node = BooleanNode(level, schema_dict)
+        elif node_type == 'any':
+            schema_node = AnyNode(level, schema_dict)
         else:
             raise SchemaError('Unknown type at level %s' % level)
 
@@ -175,9 +177,15 @@ class SchemaNode(object):
         if len(schema_dict) > 0:
             raise SchemaError('Invalid entries (%s) in schema at level %s for type %s' %
                                                 (','.join(schema_dict.keys()), level, node_type))
-
         # Return the schema node
         return schema_node
+
+
+class AnyNode(SchemaNode):
+    expected_types = (str, unicode, list, dict, set, tuple, int)
+
+    def validate_data(self, data):
+        return [ ]
 
 
 class StringNode(SchemaNode):
