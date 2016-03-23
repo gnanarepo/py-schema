@@ -5,10 +5,11 @@ nevertheless use dictionaries or lists of various data and are stuck with it, sp
 for saving configuration etc.
 """
 import re
-import traceback
 
+# TODO: Move all the strings to one place
 type_mismatch = 'Expecting value to be {type} but got {actual_type} for {level}'
 invalid_boolean = 'Invalid Value for boolean field'
+
 
 def get_bool(val):
     """
@@ -26,6 +27,18 @@ def get_bool(val):
 
 
 class Schema(object):
+    """ Basic class through which data validation can be done.
+    Create a schema object by providing schema dictionary as argument.  Once the schema
+    is created call realize() to get the normalized schema, and validate to the validate
+    a document against the schema.
+    >>> s = Schema({'type':'string', 'display_name':'Root'})
+    >>> s.validate('xyz')
+    []
+    >>> s.validate(10)
+    ["Expecting value to be (<type 'str'>, <type 'unicode'>) but got <type 'int'> for root(Root)"]
+    >>> s.realize()
+    {'type': 'string', 'allow_none': False, 'display_name': 'Root', 'description': ''}
+    """
     def __init__(self, schema_dict):
         self.root = SchemaNode.create_schema_node('root', schema_dict)
 
@@ -225,6 +238,12 @@ class SubSchemaNode(SchemaNode):
         self._sub_schema = None
         self.sub_schema = schema_dict.pop('value_schema', None)
 
+    def realize_schema(self, attrs):
+        super(SubSchemaNode, self).realize_schema(attrs)
+        if self.sub_schema:
+            attrs['value_schema'] = { }
+            self.sub_schema.realize_schema(attrs['value_schema'])
+
     def get_sub_schema(self):
         return self._sub_schema
 
@@ -254,11 +273,11 @@ class ListNode(SubSchemaNode):
         self.min_size = schema_dict.pop('minimum_size', None)
         self.max_size = schema_dict.pop('maximum_size', None)
 
-    def realize_schema(self, attrs):
-        super(ListNode, self).realize_schema(attrs)
-        sub_attrs = {}
-        self.sub_schema.realize_schema(sub_attrs)
-        attrs['value_schema'] = sub_attrs
+        if self.min_size > self.max_size:
+            raise SchemaError('minimum_size can not be greater than maximum_size at %s' % self.level)
+
+        if not self.sub_schema:
+            raise SchemaError('value_schema is mandatory for list type')
 
     def validate_data(self, data):
         schema_errors = []
@@ -270,7 +289,6 @@ class ListNode(SubSchemaNode):
             schema_errors.extend('Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level))
 
         for i, each_value in enumerate(data):
-
             schema_errors.extend(self.sub_schema.validate(each_value))
 
         return schema_errors
@@ -360,10 +378,6 @@ class MapNode(SubSchemaNode):
 
     def realize_schema(self, attrs):
         super(MapNode, self).realize_schema(attrs)
-
-        if self.sub_schema:
-            attrs['value_schema'] = {}
-            self.sub_schema.realize_schema(attrs['value_schema'])
 
         attrs['known_children'] = {}
         for k, v in self.known_children.iteritems():
