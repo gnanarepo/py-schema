@@ -273,6 +273,12 @@ class ListNode(SubSchemaNode):
         self.min_size = schema_dict.pop('minimum_size', None)
         self.max_size = schema_dict.pop('maximum_size', None)
 
+        unique = schema_dict.pop('unique', None)
+        if unique is not None:
+            self.unique = get_bool(unique)
+        else:
+            self.unique = None
+
         if self.min_size > self.max_size:
             raise SchemaError('minimum_size can not be greater than maximum_size at %s' % self.level)
 
@@ -283,13 +289,25 @@ class ListNode(SubSchemaNode):
         schema_errors = []
 
         if self.min_size and len(data) < self.min_size:
-            schema_errors.extend('Minimum size is set to %s, but actual size is %s at level %s' % (self.min_size, len(data), self.level))
+            schema_errors.append('Minimum size is set to %s, but actual size is %s at level %s' % (self.min_size, len(data), self.level))
 
         if self.max_size and len(data) < self.min_size:
-            schema_errors.extend('Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level))
+            schema_errors.append('Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level))
 
         for i, each_value in enumerate(data):
             schema_errors.extend(self.sub_schema.validate(each_value))
+
+        if self.unique:
+            dups = set()
+            found = set()
+            for x in data:
+                if x in found:
+                    dups.add(x)
+                else:
+                    found.add(x)
+            if dups:
+                schema_errors.append('Duplicate(s) %s found for a unique list at %s' % ( ",".join(str(a) for a in dups), self.level))
+
 
         return schema_errors
 
