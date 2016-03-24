@@ -67,7 +67,7 @@ class SchemaNode(object):
         self._level = level
         try:
             self.display_name = schema_dict.pop('display_name')
-            self.description = schema_dict.pop('description', '')
+            self.description = schema_dict.pop('description', None)
         except:
             raise SchemaError('display_name is mandatory at level %s' % self.level)
         self.level += '(%s)' % self.display_name
@@ -119,7 +119,8 @@ class SchemaNode(object):
             self._realize_node()
 
         attrs['display_name'] = self.display_name
-        attrs['description'] = self.description
+        if self.description is not None:
+            attrs['description'] = self.description
         attrs['type'] = self.type
         attrs['allow_none'] = self.allow_none
         if self.verbatim is not None:
@@ -284,6 +285,15 @@ class ListNode(SubSchemaNode):
 
         if not self.sub_schema:
             raise SchemaError('value_schema is mandatory for list type')
+
+    def realize_schema(self, attrs):
+        super(ListNode, self).realize_schema(attrs)
+        if self.min_size is not None:
+            attrs['minimum_size'] = self.min_size
+        if self.max_size is not None:
+            attrs['maximum_size'] = self.max_size
+        if self.unique is not None:
+            attrs['unique'] = self.unique
 
     def validate_data(self, data):
         schema_errors = []

@@ -57,12 +57,14 @@ Each level is described by the following properties in a python dictionary:
 | **List Specific** |  |  |  |  |
 | minimum_size | Minimum number of entries in list | False | False | 0 |
 | maximum_size | Maximum number of entries in list | False | False | Unlimited |
+| unique | Require all list entries be unique (5) | False | False | No restriction |
+
 
 1. For each complex type of object, schema is required either directly or through inheritance.  Schema defined here is used for all children where an explicit schema is not defined.
 2. Data is only validated and never modified.  Validation errors are listed as a simple list of strings.
 3. Verbatim data is for other consumers for example UI to drive the widgets or to give hints.  It has no meaning for the backend.
 4. Any type has no validations done except for any custom validations.  Use with care.  You are creating the schema to avoid any in the first place :-)
-
+5. If a list contains complex values unique check can become complicated.  Current implementation simple adds values to a set for comparison.
 
 Lambda Support
 --------------

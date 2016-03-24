@@ -1,4 +1,5 @@
 from pyschema import Schema
+from pprint import pprint
 
 s = Schema({
     'type': 'list',
@@ -23,3 +24,4 @@ s1 = Schema({
     'maximum_size': 5
 })
 print "VALID Duplicate: "+"".join(s1.validate([5,6,5,6]))
+pprint(s1.realize())
