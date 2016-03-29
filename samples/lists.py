@@ -19,7 +19,7 @@ s1 = Schema({
     'type': 'list',
     'value_schema': {'type': 'number', 'display_name': 'Num'},
     'display_name': 'The List',
-    'unique': True,
+    'unique': False,
     'minimum_size': 2,
     'maximum_size': 5
 })
