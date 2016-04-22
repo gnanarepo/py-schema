@@ -280,7 +280,7 @@ class ListNode(SubSchemaNode):
         else:
             self.unique = None
 
-        if self.min_size > self.max_size:
+        if self.min_size and self.max_size and self.min_size > self.max_size:
             raise SchemaError('minimum_size can not be greater than maximum_size at %s' % self.level)
 
         if not self.sub_schema:
