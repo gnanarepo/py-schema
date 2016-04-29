@@ -299,10 +299,10 @@ class ListNode(SubSchemaNode):
         schema_errors = []
 
         if self.min_size and len(data) < self.min_size:
-            schema_errors.append(['Minimum size is set to %s, but actual size is %s at level %s' % (self.min_size, len(data), self.level)])
+            schema_errors.append('Minimum size is set to %s, but actual size is %s at level %s' % (self.min_size, len(data), self.level))
 
         if self.max_size and len(data) < self.min_size:
-            schema_errors.append(['Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level)])
+            schema_errors.append('Maximum size is set to %s, but actual size is %s at level %s' % (self.max_size, len(data), self.level))
 
         for i, each_value in enumerate(data):
             schema_errors.extend(self.sub_schema.validate(each_value))
@@ -317,7 +317,6 @@ class ListNode(SubSchemaNode):
                     found.add(x)
             if dups:
                 schema_errors.append('Duplicate(s) %s found for a unique list at %s' % ( ",".join(str(a) for a in dups), self.level))
-
 
         return schema_errors
 
