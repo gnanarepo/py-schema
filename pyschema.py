@@ -157,8 +157,6 @@ class SchemaNode(object):
                                      level=self.level)
             ]
 
-        print "Starting the validation process for %s" % self.level
-
         # Perform node specific validation
         schema_errors =  self.validate_data(data)
         if self.custom_validation:
