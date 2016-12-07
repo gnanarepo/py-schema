@@ -157,6 +157,8 @@ class SchemaNode(object):
                                      level=self.level)
             ]
 
+        print "Starting the validation process for %s" % self.level
+
         # Perform node specific validation
         schema_errors =  self.validate_data(data)
         if self.custom_validation:
@@ -426,7 +428,10 @@ class MapNode(SubSchemaNode):
                 schema_errors.append('%s is not allowed at level %s' % (each_key, self.level))
 
             sub_schema = self.known_children.get(each_key) or self.sub_schema
-            schema_errors.extend(sub_schema.validate(data[each_key]))
+            if not sub_schema:
+                schema_errors.append("No sub-schema found for %s at %s" % (each_key, self.level))
+            else:
+                schema_errors.extend(sub_schema.validate(data[each_key]))
 
             names_found.add(each_key)
 
