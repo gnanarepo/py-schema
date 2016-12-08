@@ -392,6 +392,10 @@ class MapNode(SubSchemaNode):
         # a name defines no specific schema
         self._preset = False
         self.known_children = schema_dict.pop('known_children', {})
+        self.allow_list = schema_dict.pop('allow_list', False)
+        
+        if self.allow_list:
+            self.expected_types = (dict, list)
 
         # Check for allow unknown values
         try:
@@ -418,24 +422,37 @@ class MapNode(SubSchemaNode):
 
     def validate_data(self, data):
         schema_errors = []
-        names_found = set()
-        # Go to the next level of validation
-        for each_key in data:
-
-            if each_key not in self.known_children and self.allow_unknown_children == False:
-                schema_errors.append('%s is not allowed at level %s' % (each_key, self.level))
-
-            sub_schema = self.known_children.get(each_key) or self.sub_schema
-            if not sub_schema:
-                schema_errors.append("No sub-schema found for %s at %s" % (each_key, self.level))
+        
+        def do_validate(data):
+            names_found = set()
+            # Go to the next level of validation
+            for each_key in data:
+    
+                if each_key not in self.known_children and self.allow_unknown_children == False:
+                    schema_errors.append('%s is not allowed at level %s' % (each_key, self.level))
+    
+                sub_schema = self.known_children.get(each_key) or self.sub_schema
+                if not sub_schema:
+                    schema_errors.append("No sub-schema found for %s at %s" % (each_key, self.level))
+                else:
+                    schema_errors.extend(sub_schema.validate(data[each_key]))
+    
+                names_found.add(each_key)
+    
+            remaining_names = self.mandatory_names - names_found
+            if remaining_names:
+                schema_errors.append("Values are required for %s at %s" % (",".join(remaining_names), self.level))
+        
+        if self.allow_list:
+            if isinstance(data, list):
+                level_save = self.level
+                for i,x in enumerate(data):
+                    self.level = level_save + str(i)
+                    do_validate(x)
             else:
-                schema_errors.extend(sub_schema.validate(data[each_key]))
-
-            names_found.add(each_key)
-
-        remaining_names = self.mandatory_names - names_found
-        if remaining_names:
-            schema_errors.append("Values are required for %s at %s" % (",".join(remaining_names), self.level))
+                do_validate(data)
+        else:
+            do_validate(data)
 
         return schema_errors
 
