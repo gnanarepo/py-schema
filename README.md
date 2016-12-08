@@ -45,6 +45,7 @@ Each level is described by the following properties in a python dictionary:
 | known_children | A map of named children that are allowed for a map.  Each named children can have their own schema the value. If it is blank dictionary, or None, value_schema is used. | False | True | Blank Map | 
 | allow_unknown_children | Should the UI allow adding children whose names are not known.  If this is set to true, value schema attribute above must be defined. | False | False | False |
 | mandatory_children | Names for which values must be provided.  Useful for a map only.	| False | True | No Restrictions | 
+| allow_list | Allows list of maps in addition to map.  If List is given each item is validated.	| False | False | No Restrictions |
 | **Number Specific** |  |  |  |  |
 | minimum_value | Used for int type leaf nodes only. | False | True | No Limit |
 | maximum_value	| Used for int type leaf nodes only.| False | True | No Limit | 
