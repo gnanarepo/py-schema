@@ -5,11 +5,15 @@ nevertheless use dictionaries or lists of various data and are stuck with it, sp
 for saving configuration etc.
 """
 import re
+import os
+import jinja2
+from pandas.io.wb import search
 
 # TODO: Move all the strings to one place
 type_mismatch = 'Expecting value to be {type} but got {actual_type} for {level}'
 invalid_boolean = 'Invalid Value for boolean field'
 
+default_template_dir = os.path.join(os.path.dirname(__file__), "doc_templates")
 
 def get_bool(val):
     """
@@ -49,8 +53,23 @@ class Schema(object):
         realized_schema = {}
         self.root.realize_schema(realized_schema)
         return realized_schema
-
-
+    
+    def document(self, template_directory=None):
+        self.realize()
+        
+        if template_directory:
+            search_path = [template_directory, default_template_dir]
+        else:
+            search_path = [default_template_dir]
+        jinja_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(search_path), 
+            autoescape=False
+        )
+        jinja_env.filters['strip_disp_name'] = lambda x: x.split('(')[0]
+        
+        template =  jinja_env.get_template("overall2.html")
+        return template.render(root = self.root)
+    
 class SchemaNode(object):
     allowed_expansions = {
         ('known_children', dict),
@@ -163,10 +182,26 @@ class SchemaNode(object):
             schema_errors.extend(self.custom_validation(data))
 
         return schema_errors
-
+    
+    def get_target(self):
+        return self.level.split('(')[0].replace('.','_')
+    
     def validate_data(self, data):
         raise SchemaError('CODE ERROR: Each child node must implement this method')
-
+    
+    # methods related to documentation
+    def get_short_decoration(self):
+        return ""
+    
+    def should_doc_children(self):
+        return False
+    
+    def doc_child_list(self):
+        return [ ] 
+    
+    def get_doc_tags(self):
+        return {}
+    
     @staticmethod
     def create_schema_node(level, schema_dict):
         # Get the type of the node and create the object
@@ -200,6 +235,9 @@ class AnyNode(SchemaNode):
 
     def validate_data(self, data):
         return [ ]
+    
+    def get_short_decoration(self):
+        return "*"
 
 
 class StringNode(SchemaNode):
@@ -218,6 +256,17 @@ class StringNode(SchemaNode):
             attrs['allowed_values'] = self.allowed_values
         if self.valid_pattern:
             attrs['allowed_pattern'] = self.valid_pattern
+            
+    def get_short_decoration(self):
+        return "A"
+    
+    def get_doc_tags(self):
+        tags = {}
+        if self.allowed_values: 
+            tags['Allowed Values'] = ", ".join(self.allowed_values)
+        if self.valid_pattern:
+            tags['Allowed Pattern'] = self.valid_pattern
+        return tags
 
     def validate_data(self, data):
         # Check for valid values
@@ -294,6 +343,15 @@ class ListNode(SubSchemaNode):
             attrs['maximum_size'] = self.max_size
         if self.unique is not None:
             attrs['unique'] = self.unique
+            
+    def should_doc_children(self):
+        return True
+            
+    def get_short_decoration(self):
+        return "[]"
+    
+    def doc_child_list(self):
+        return [ ('N/A', self.sub_schema) ] 
 
     def validate_data(self, data):
         schema_errors = []
@@ -341,6 +399,9 @@ class NumberNode(SchemaNode):
             attrs['minimum_value'] = self.min_value
         if self.max_value:
             attrs['maximum_value'] = self.max_value
+            
+    def get_short_decoration(self):
+        return "1"
 
     def validate_data(self, data):
         if self.min_value and data < self.min_value:
@@ -367,6 +428,9 @@ class BooleanNode(SchemaNode):
         super(BooleanNode, self).realize_schema(attrs)
         attrs['true_value'] = self.true_value
         attrs['false_value'] = self.false_value
+        
+    def get_short_decoration(self):
+        return "T"
 
     def validate_data(self, data):
         """
@@ -418,6 +482,18 @@ class MapNode(SubSchemaNode):
 
         attrs['mandatory_children'] = list(self.mandatory_names)
 
+    def get_short_decoration(self):
+        return "{}"
+    
+    def should_doc_children(self):
+        return True
+    
+    def doc_child_list(self):
+        if self.sub_schema:
+            yield ('Any Children', self.sub_schema)
+        for k,v in self.known_children.iteritems():
+            if v:
+                yield k, v
 
     def validate_data(self, data):
         schema_errors = []

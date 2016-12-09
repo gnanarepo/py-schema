@@ -1,0 +1,129 @@
+{% macro render_tree(node) -%}
+    {% if node.should_doc_children() %}
+    <ul>
+        {% for name, child_node in node.doc_child_list() %}
+        <li>
+            <span class="badge">{{child_node.get_short_decoration()}}</span>
+            <a href="#{{child_node.get_target()}}" class="small">{{child_node.display_name}}</a> 
+        {{ render_tree(child_node) }}
+        {% endfor %}
+    </ul>
+    {% endif %}
+{%- endmacro %}
+{% macro render_description(node) -%}
+    {% if node.should_doc_children() %}
+        {% for name, child_node in node.doc_child_list() %}
+        <hr class='divide_description'/>
+        <a id='{{child_node.get_target()}}' class="setting_name">{{name}}</a>
+        ({{child_node.level|strip_disp_name}}) <br/>
+        {{child_node.display_name}}
+        <p>
+        <dl class="dl-horizontal">
+            <dt>Type</dt><dd>{{child_node.type}}</dd>
+        {% for k,v in child_node.get_doc_tags().iteritems() %}
+            <dt>{{k}}</dt><dd>{{v}}</dd>
+        {% endfor %}
+        </dl>
+        <p>
+        {{child_node.description|default('Warning: No description', true)}}
+        <p>
+        {% if child_node.custom_validation %}
+        <div class="bs-callout bs-callout-info">
+           <h6> Custom Validation</h6> <p>
+           {{ child_node.custom_validation.__doc__|default("No doc string found", true) }}
+            </p>
+        </div>
+        {% endif %}
+
+        {{ render_description(child_node) }}
+        
+        {% endfor %}
+    {% endif %}
+{%- endmacro %}
+
+<html>
+<head>
+	<style>
+	    #tree, #descriptions {
+	         display: inline-block;
+	    }
+	    
+	    #tree {
+	        width: 20%;
+	        padding-right: 20px;
+	        border-right: 5px solid #CECECE;
+	        position: relative;
+	        top: 0;
+	        left: 0;
+	        overflow-y: auto;
+	        height: 800px;
+	    }
+	    
+	    #descriptions {
+	        width: 80%;
+	        margin-left: 20px;
+	        height: 800px;
+	        overflow-y: auto;
+	        position: relative;
+	    }
+	    
+	    .divide_description {
+	        border: lightgray 1px dashed;
+	        width: 80%;
+	    }
+	    
+	    .wrapper {
+	        display: flex;
+	    }
+	    
+	    .setting_name {
+	        font-family: monospace;
+			font-weight: bold;
+			font-size: 15px;
+	    }
+	    
+	    .setting_path {
+	        font-family: monospace;
+            font-size: 12px;
+	    }
+	    
+	    .display_name_tree {
+	    }
+	    
+	    .display_name_description {
+	    }
+	    
+	    li {
+	    }
+	    
+	    ul {
+	    }
+	    
+	    .bs-callout-info {
+            border-left-color: #1b809e;
+        }
+        .bs-callout {
+		    padding: 10px;
+		    margin: 10px 0;
+		    border: 1px solid #eee;
+		    border-left-width: 5px;
+		    border-radius: 3px;
+		}
+	</style>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<title>{{root.display_name}}</title>
+</head>
+<body>
+    <div class='wrapper'>
+        <div id='tree'>
+            {{ root.display_name }}
+            {{ render_tree(root) }}
+        </div>
+        <div id='descriptions'>
+            <h2>{{ root.display_name }}</h2>
+            {{ root.description }}
+            {{ render_description(root) }}
+        </div>
+    </div>
+</body>
+</html>
