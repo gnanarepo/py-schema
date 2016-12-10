@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module allows validation of dictionaries or lists that contain unstructured data.
 While using python objects is the right approach to have structured data, many apps
@@ -63,7 +64,7 @@ class Schema(object):
             search_path = [default_template_dir]
         jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(search_path), 
-            autoescape=False
+            autoescape=True
         )
         jinja_env.filters['strip_disp_name'] = lambda x: x.split('(')[0]
         
@@ -238,6 +239,11 @@ class AnyNode(SchemaNode):
     
     def get_short_decoration(self):
         return "*"
+    
+    def get_doc_tags(self):
+        return {
+            "WARNING": "Values set at this level are not validated. Exercise caution."
+        }
 
 
 class StringNode(SchemaNode):
@@ -258,7 +264,7 @@ class StringNode(SchemaNode):
             attrs['allowed_pattern'] = self.valid_pattern
             
     def get_short_decoration(self):
-        return "A"
+        return "a"
     
     def get_doc_tags(self):
         tags = {}
@@ -281,7 +287,7 @@ class StringNode(SchemaNode):
 
 
 class SubSchemaNode(SchemaNode):
-
+    subschema_denote = '.n'
     def __init__(self, level, schema_dict):
         super(SubSchemaNode, self).__init__(level, schema_dict)
         self._subschema_realized = False
@@ -303,7 +309,7 @@ class SubSchemaNode(SchemaNode):
                 raise SchemaError('Subschema already realized')
 
             try:
-                self.sub_schema = SchemaNode.create_schema_node(self._level+'.n', obj)
+                self.sub_schema = SchemaNode.create_schema_node(self._level+self.subschema_denote, obj)
             except KeyError:
                 raise SchemaError('List type node requires a value_schema at %s' % self.level)
 
@@ -317,6 +323,7 @@ class SubSchemaNode(SchemaNode):
 class ListNode(SubSchemaNode):
     expected_types = (list, set, tuple)
     type = 'list'
+    subschema_denote = "[i]"
 
     def __init__(self, level, schema_dict):
         super(ListNode, self).__init__(level, schema_dict)
@@ -334,6 +341,13 @@ class ListNode(SubSchemaNode):
 
         if not self.sub_schema:
             raise SchemaError('value_schema is mandatory for list type')
+        
+    def get_doc_tags(self):
+        return {
+            'values': 'Must be unique' if self.unique else 'May have duplicates',
+            'minimum size': self.min_size,
+            'maximum size': self.max_size
+        }
 
     def realize_schema(self, attrs):
         super(ListNode, self).realize_schema(attrs)
@@ -348,7 +362,8 @@ class ListNode(SubSchemaNode):
         return True
             
     def get_short_decoration(self):
-        return "[]"
+        #return r'&#x2630;'
+        return '[ ]'
     
     def doc_child_list(self):
         return [ ('N/A', self.sub_schema) ] 
@@ -400,6 +415,14 @@ class NumberNode(SchemaNode):
         if self.max_value:
             attrs['maximum_value'] = self.max_value
             
+    def get_doc_tags(self):
+        tags = {}
+        if self.min_value:
+            tags['Minimum Value'] = self.min_value
+        if self.max_value:
+            tags['Maximum Value'] = self.max_value
+        return tags
+    
     def get_short_decoration(self):
         return "1"
 
@@ -430,7 +453,13 @@ class BooleanNode(SchemaNode):
         attrs['false_value'] = self.false_value
         
     def get_short_decoration(self):
-        return "T"
+        return r'&#x2713;'
+    
+    def get_doc_tags(self):
+        return {
+            'True Value': self.true_value,
+            'False Value': self.false_value
+        }
 
     def validate_data(self, data):
         """
@@ -447,6 +476,7 @@ class MapNode(SubSchemaNode):
     """
     expected_types = dict
     type = 'map'
+    subschema_denote = ".<name>"
 
     def __init__(self, level, schema_dict):
         super(MapNode, self).__init__(level, schema_dict)
@@ -470,6 +500,18 @@ class MapNode(SubSchemaNode):
 
         # Get other attributes
         self.mandatory_names = set(schema_dict.pop('mandatory_children', []))
+        
+    def get_doc_tags(self):
+        additional_children = [x[0] for x in self.known_children.iteritems() if x[1] == None]
+        tags = {
+            'Unknown children': 'Allowed' if self.allow_unknown_children else 'Not Allowed',
+            'Can be a list': 'Yes' if self.allow_list else 'No' 
+        }
+        if additional_children:
+            tags['Additinal Children'] = ", ".join(additional_children)
+        if self.mandatory_names:
+            tags['Must Provide'] = ",".join(self.mandatory_names)
+        return tags
 
     def realize_schema(self, attrs):
         super(MapNode, self).realize_schema(attrs)
@@ -483,14 +525,14 @@ class MapNode(SubSchemaNode):
         attrs['mandatory_children'] = list(self.mandatory_names)
 
     def get_short_decoration(self):
-        return "{}"
+        return "{ }"
     
     def should_doc_children(self):
         return True
     
     def doc_child_list(self):
         if self.sub_schema:
-            yield ('Any Children', self.sub_schema)
+            yield ('<Name>', self.sub_schema)
         for k,v in self.known_children.iteritems():
             if v:
                 yield k, v

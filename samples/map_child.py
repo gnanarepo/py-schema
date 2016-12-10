@@ -15,3 +15,6 @@ s = Schema({
 
 print 'Must Pass: '+'\n'.join(s.validate({'a': 'Something'}))
 print 'Must FAIL: '+'\n'.join(s.validate({'z':'ERROR'}))
+
+print s.document()
+
