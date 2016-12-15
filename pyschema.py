@@ -108,7 +108,10 @@ class SchemaNode(object):
             if callable(code_like):
                 ret_value = code_like()
             elif isinstance(code_like, basestring):
-                ret_value = eval(code_like)
+                try:
+                    ret_value = eval(code_like)
+                except:
+                    raise SchemaError("Guessed the value of (%s) at %s to be code, but evaluation failed" % (code_like, self.level))
             else:
                 raise SchemaError("Don't known how to execute dynamic schema at %s (expected type = %s, actual type =%s)" % (self.level,expected_type, type(code_like)))
 
@@ -180,7 +183,7 @@ class SchemaNode(object):
         # Perform node specific validation
         schema_errors =  self.validate_data(data)
         if self.custom_validation:
-            schema_errors.extend(self.custom_validation(data))
+            schema_errors.extend("%s: %s at %s" % (self.custom_validation.__name__, x, self.level) for x in self.custom_validation(data))
 
         return schema_errors
     
