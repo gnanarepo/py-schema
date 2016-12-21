@@ -8,7 +8,6 @@ for saving configuration etc.
 import re
 import os
 import jinja2
-from pandas.io.wb import search
 
 # TODO: Move all the strings to one place
 type_mismatch = 'Expecting value to be {type} but got {actual_type} for {level}'
