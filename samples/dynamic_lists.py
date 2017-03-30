@@ -1,6 +1,8 @@
 from pyschema import Schema
 import functools
 from pprint import pprint
+from six import print_ as print_out
+from six import iteritems
 
 name_map = {
     'names': 'names.txt',
@@ -13,7 +15,7 @@ def list_from_file(filename):
 
 def name_list():
     ret_value = {}
-    for k, v in name_map.iteritems():
+    for k, v in iteritems(name_map):
         ret_value[k] = {
             'display_name': k,
             'type': 'list',
@@ -32,12 +34,12 @@ schema = Schema({
 })
 
 pprint(schema.realize())
-print "\n\n"
+print_out("\n\n")
 
-print "Expecting a type error\n---------------"
+print_out("Expecting a type error\n---------------")
 pprint(schema.validate({'names':[], 'places':'Lakkavaram'}))
-print "\n\n"
+print_out("\n\n")
 
-print "No Errors\n----------------"
+print_out("No Errors\n----------------")
 pprint(schema.validate({'names':['john'], 'places':['Lakkavaram']}))
-print "\n\n"
+print_out("\n\n")

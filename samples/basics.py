@@ -1,5 +1,6 @@
 from pyschema import Schema
 from pprint import pprint
+from six import print_ as print_out
 def name_list():
     return ['a','b','c']
 s = Schema({
@@ -27,23 +28,23 @@ s = Schema({
     'mandatory_children': ['listed_names']
 })
 
-print "Realized schema\n---------------"
+print_out("Realized schema\n---------------")
 pprint(s.realize())
-print "\n\n"
+print_out("\n\n")
 
-print "Sample Validation Errors: 1\n---------------"
+print_out("Sample Validation Errors: 1\n---------------")
 pprint(s.validate({
     'listed_names': 10
 }))
-print "\n\n"
+print_out("\n\n")
 
-print "Sample Validation Errors: 2\n---------------"
+print_out("Sample Validation Errors: 2\n---------------")
 pprint(s.validate({
     'listed_names': [10, 'invalid-name']
 }))
-print "\n\n"
+print_out("\n\n")
 
-print "Sample Validation Errors: 3 (No errors)\n---------------"
+print_out("Sample Validation Errors: 3 (No errors)\n---------------")
 pprint(s.validate({
     'listed_names': ['a', 'b']
 }))

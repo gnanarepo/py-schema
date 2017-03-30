@@ -9,6 +9,13 @@ import re
 import os
 import jinja2
 
+# Import all the types from six to support both PY2 and PY3
+from six import integer_types
+from six import string_types
+from six import text_type
+from six import binary_type
+from six import iteritems
+
 # TODO: Move all the strings to one place
 type_mismatch = 'Expecting value to be {type} but got {actual_type} for {level}'
 invalid_boolean = 'Invalid Value for boolean field'
@@ -234,7 +241,7 @@ class SchemaNode(object):
 
 
 class AnyNode(SchemaNode):
-    expected_types = (str, unicode, list, dict, set, tuple, int)
+    expected_types = (string_types, text_type, list, dict, set, tuple, integer_types)
 
     def validate_data(self, data):
         return [ ]
@@ -249,7 +256,7 @@ class AnyNode(SchemaNode):
 
 
 class StringNode(SchemaNode):
-    expected_types = (str, unicode)
+    expected_types = (string_types, text_type)
     type = 'string'
 
     def __init__(self, level, schema_dict):
@@ -399,7 +406,7 @@ class ListNode(SubSchemaNode):
 class NumberNode(SchemaNode):
     """ Defines a schema node for numeric data. At present limited to integers only
     """
-    expected_types = int
+    expected_types = integer_types
     type = 'number'
 
     def __init__(self, level, schema_dict):
@@ -504,7 +511,7 @@ class MapNode(SubSchemaNode):
         self.mandatory_names = set(schema_dict.pop('mandatory_children', []))
         
     def get_doc_tags(self):
-        additional_children = [x[0] for x in self.known_children.iteritems() if x[1] == None]
+        additional_children = [x[0] for x in iteritems(self.known_children) if x[1] == None]
         tags = {
             'Unknown children': 'Allowed' if self.allow_unknown_children else 'Not Allowed',
             'Can be a list': 'Yes' if self.allow_list else 'No' 
@@ -519,7 +526,7 @@ class MapNode(SubSchemaNode):
         super(MapNode, self).realize_schema(attrs)
 
         attrs['known_children'] = {}
-        for k, v in self.known_children.iteritems():
+        for k, v in iteritems(self.known_children):
             attrs['known_children'][k] = {}
             if v:
                 v.realize_schema(attrs['known_children'][k])
@@ -535,7 +542,7 @@ class MapNode(SubSchemaNode):
     def doc_child_list(self):
         if self.sub_schema:
             yield ('<Name>', self.sub_schema)
-        for k,v in self.known_children.iteritems():
+        for k,v in iteritems(self.known_children):
             if v:
                 yield k, v
 
@@ -581,7 +588,7 @@ class MapNode(SubSchemaNode):
                 raise SchemaError('CODE ERROR: Setting children twice')
             self._preset = True
             self._known_children = {}
-            for k,v in child_object.iteritems():
+            for k,v in iteritems(child_object):
                 if v:
                     self._known_children[k] = SchemaNode.create_schema_node(self._level+'.'+k, v)
                 else:
