@@ -1,4 +1,5 @@
 from pyschema import Schema
+from six import print_ as print_out
 
 def even_only(a):
         return ["size must be even"] if len(a) % 2 else [ ]
@@ -9,10 +10,10 @@ s = Schema({
     'custom_validation': even_only
 })
 
-print "EVEN STEVENS"
-print "------------"
-print "Should pass: "+"\n".join(s.validate('String'))
-print "Should fail: "+"\n".join(s.validate('basestr'))
+print_out("EVEN STEVENS")
+print_out("------------")
+print_out("Should pass: "+"\n".join(s.validate('String')))
+print_out("Should fail: "+"\n".join(s.validate('basestr')))
 
 s = Schema({
     'type': 'list',
@@ -24,8 +25,8 @@ s = Schema({
     }
 })
 
-print "EVEN STEVENS ENLISTED"
-print "---------------------"
-print "Should pass: "+"\n".join(s.validate(['String', 'basestr']))
-print "Should fail: "+"\n".join(s.validate(('basestr',)))
-print "Should fail: "+"\n".join(s.validate('basestr'))
+print_out("EVEN STEVENS ENLISTED")
+print_out("---------------------")
+print_out("Should pass: "+"\n".join(s.validate(['String', 'basestr'])))
+print_out("Should fail: "+"\n".join(s.validate(('basestr',))))
+print_out("Should fail: "+"\n".join(s.validate('basestr')))

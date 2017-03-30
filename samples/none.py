@@ -1,4 +1,5 @@
 from pyschema import Schema
+from six import print_ as print_out
 
 s = Schema({
     'type': 'string',
@@ -6,15 +7,15 @@ s = Schema({
     'allow_none': True
 })
 
-print "NULL ALLOWED"
-print "------------"
-print "Should pass: "+"\n".join(s.validate(None))
-print "Should pass: "+"\n".join(s.validate('String'))
-print "Should fail: "+"\n".join(s.validate(10))
+print_out("NULL ALLOWED")
+print_out("------------")
+print_out("Should pass: "+"\n".join(s.validate(None)))
+print_out("Should pass: "+"\n".join(s.validate('String')))
+print_out("Should fail: "+"\n".join(s.validate(10)))
 
 
-print "NULL NOT ALLOWED"
-print "----------------"
+print_out("NULL NOT ALLOWED")
+print_out("----------------")
 from pyschema import Schema
 
 s = Schema({
@@ -22,6 +23,6 @@ s = Schema({
     'display_name': 'Allow None Test',
 })
 
-print "Should fail: "+"\n".join(s.validate(None))
-print "Should pass: "+"\n".join(s.validate('String'))
-print "Should fail: "+"\n".join(s.validate(10))
+print_out("Should fail: "+"\n".join(s.validate(None)))
+print_out("Should pass: "+"\n".join(s.validate('String')))
+print_out("Should fail: "+"\n".join(s.validate(10)))

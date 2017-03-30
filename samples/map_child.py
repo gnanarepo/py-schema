@@ -1,4 +1,5 @@
 from pyschema import Schema
+from six import print_ as print_out
 
 s = Schema({
     'display_name': 'Names',
@@ -13,8 +14,8 @@ s = Schema({
     'allow_unknown_children': False
 })
 
-print 'Must Pass: '+'\n'.join(s.validate({'a': 'Something'}))
-print 'Must FAIL: '+'\n'.join(s.validate({'z':'ERROR'}))
+print_out('Must Pass: '+'\n'.join(s.validate({'a': 'Something'})))
+print_out('Must FAIL: '+'\n'.join(s.validate({'z':'ERROR'})))
 
-print s.document()
+print_out(s.document())
 
