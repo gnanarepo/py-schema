@@ -241,7 +241,7 @@ class SchemaNode(object):
 
 
 class AnyNode(SchemaNode):
-    expected_types = (string_types, text_type, list, dict, set, tuple, integer_types)
+    expected_types = (string_types, text_type, list, dict, set, tuple, integer_types, float)
 
     def validate_data(self, data):
         return [ ]
