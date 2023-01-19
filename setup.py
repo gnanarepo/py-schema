@@ -5,4 +5,5 @@ setup(
     description="Aviso Schema",
     author="Eswar Vandanapu",
     url="https://github.com/gnanarepo/py-schema",
+    py_modules=[]
 )
