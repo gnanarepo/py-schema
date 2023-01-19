@@ -113,7 +113,7 @@ class SchemaNode(object):
             executed = True
             if callable(code_like):
                 ret_value = code_like()
-            elif isinstance(code_like, basestring):
+            elif isinstance(code_like, str):
                 try:
                     ret_value = eval(code_like)
                 except:
@@ -235,7 +235,7 @@ class SchemaNode(object):
         # We must have consumed every key in the dictionary
         if len(schema_dict) > 0:
             raise SchemaError('Invalid entries (%s) in schema at level %s for type %s' %
-                                                (','.join(schema_dict.keys()), level, node_type))
+                                                (','.join(list(schema_dict.keys())), level, node_type))
         # Return the schema node
         return schema_node
 
